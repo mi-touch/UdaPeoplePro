@@ -201,7 +201,7 @@ jobs:
           command: |
             apk add --update --no-cache tar gzip nodejs npm aws-cli curl
       - restore_cache:
-          keys:[backend-build]
+          keys: [backend-build]
       - run:
           name: Run migrations
           command: |
