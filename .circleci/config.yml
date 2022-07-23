@@ -29,7 +29,7 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            SUCCESS=$(curl --insecure  https://kvdb.io/Li8PRCVhUxETqDXzBAvCBg/migration_<<parameters.workflow_id>>)
+            SUCCESS=$(curl --insecure  https://kvdb.io/MPiKVBHzCvV1FeJdAQ6Jom/migration_<<parameters.workflow_id>>)
             if (( $SUCCESS == 1 ));
             then
               cd ~/project/backend
@@ -217,7 +217,7 @@ jobs:
           command: |
             if grep -q "success" ~/project/backend/migrations.txt
             then
-              curl --insecure https://kvdb.io/Li8PRCVhUxETqDXzBAvCBg/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
+              curl --insecure https://kvdb.io/MPiKVBHzCvV1FeJdAQ6Jom/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
             fi
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
@@ -278,15 +278,26 @@ jobs:
           name: Deploy backend
           command: |
             cd backend
-            npm install
+            npm i
             npm run build
             cd ..
             tar -C backend -czvf artifact.tar.gz
             mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
             mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
             cd .circleci/ansible
-            echo "Contents of the Inventory.txt file is ------$(cat inventory.txt)"
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
+            # cd backend
+            # npm install
+            # npm run build
+            # cd ..
+            # tar -C backend -czvf artifact.tar.gz
+            # mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            # mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            # cd .circleci/ansible
+            # echo "Contents of the Inventory.txt file is ------$(cat inventory.txt)"
+            # ansible-playbook -i inventory.txt deploy-backend.yml
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations:
