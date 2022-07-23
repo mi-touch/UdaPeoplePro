@@ -191,15 +191,15 @@ jobs:
           name: Configure server
           command: |
             echo ENVIRONMENT=production > backend/.env
-            - TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION')}}" >> backend/.env
-            - TYPEORM_ENTITIES: "{{ lookup('env', 'TYPEORM_ENTITIES')}}" >> backend/.env
-            - TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST')}}" >> backend/.env
-            - TYPEORM_PORT: "{{ lookup('env', 'TYPEORM_PORT')}}" >> backend/.env
-            - TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME')}}" >> backend/.env
-            - TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD')}}" >> backend/.env
-            - TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE')}}" >> backend/.env
-            - TYPEORM_MIGRATIONS: "{{ lookup('env', 'TYPEORM_MIGRATIONS')}}" >> backend/.env
-            - TYPEORM_MIGRATIONS_DIR: "{{ lookup('env', 'TYPEORM_MIGRATIONS_DIR')}}" >> backend/.env
+            echo TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION')}}" >> backend/.env
+            echo TYPEORM_ENTITIES: "{{ lookup('env', 'TYPEORM_ENTITIES')}}" >> backend/.env
+            echo TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST')}}" >> backend/.env
+            echo TYPEORM_PORT: "{{ lookup('env', 'TYPEORM_PORT')}}" >> backend/.env
+            echo TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME')}}" >> backend/.env
+            echo TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD')}}" >> backend/.env
+            echo TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE')}}" >> backend/.env
+            echo TYPEORM_MIGRATIONS: "{{ lookup('env', 'TYPEORM_MIGRATIONS')}}" >> backend/.env
+            echo TYPEORM_MIGRATIONS_DIR: "{{ lookup('env', 'TYPEORM_MIGRATIONS_DIR')}}" >> backend/.env
             cat backend/.env
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
@@ -337,25 +337,15 @@ jobs:
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             # echo API_URL="http://${BACKEND_IP}:3030"
-            if curl -s "${API_URL}/api/status" | grep "ok"
-            then
-              return 0
-            else
-              return 1
-            fi
+            if curl --connect-timeout 5 -s "${API_URL}/api/status" | grep "ok"; then return 0; else return 1; fi
       - run:
           name: Frontend smoke test.
           command: |
             export URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-west-2.amazonaws.com/#/employees"            
             echo $URL
-            if curl -s ${URL} | grep "Welcome"
-            then
-              return 1
-            else
-              return 1
-            fi
-      # - destroy-environment:
-      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+            if curl -s ${URL} | grep "Welcome"; then return 0; else return 1; fi
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7} 
 
