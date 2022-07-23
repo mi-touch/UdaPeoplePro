@@ -1,5 +1,10 @@
 version: 2.1
 
+parameters:
+  workflow_id:
+    type: string
+    default: ${CIRCLE_WORKFLOW_ID:0:7}
+
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -185,8 +190,23 @@ jobs:
       - run:
           name: Configure server
           command: |
+            echo ENVIRONMENT=production > backend/.env
+            - TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION')}}" >> backend/.env
+            - TYPEORM_ENTITIES: "{{ lookup('env', 'TYPEORM_ENTITIES')}}" >> backend/.env
+            - TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST')}}" >> backend/.env
+            - TYPEORM_PORT: "{{ lookup('env', 'TYPEORM_PORT')}}" >> backend/.env
+            - TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME')}}" >> backend/.env
+            - TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD')}}" >> backend/.env
+            - TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE')}}" >> backend/.env
+            - TYPEORM_MIGRATIONS: "{{ lookup('env', 'TYPEORM_MIGRATIONS')}}" >> backend/.env
+            - TYPEORM_MIGRATIONS_DIR: "{{ lookup('env', 'TYPEORM_MIGRATIONS_DIR')}}" >> backend/.env
+            cat backend/.env
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/backend
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       # Here's where you will add some code to rollback on failure      
@@ -205,6 +225,8 @@ jobs:
             sudo ./aws/install
       - restore_cache:
           keys: [backend-build]
+      - attach_workspace:
+          at: ~/
       - run:
           name: Run migrations
           command: |
@@ -270,10 +292,10 @@ jobs:
           name: Install dependencies
           command: |
             apk add --update --no-cache tar gzip nodejs npm aws-cli ansible
-      - attach_workspace:
-          at: ~/
       - restore_cache:
           keys: [backend-build]
+      - attach_workspace:
+          at: ~/
       - run:
           name: Deploy backend
           command: |
@@ -416,7 +438,7 @@ workflows:
           requires: [run-migrations]
       - smoke-test:
           requires: [deploy-backend, deploy-frontend]
-      # - cloudfront-update:
-      #     requires: [smoke-test]
-      # - cleanup:
-      #     requires: [cloudfront-update]
+      - cloudfront-update:
+          requires: [smoke-test]
+      - cleanup:
+          requires: [cloudfront-update]
