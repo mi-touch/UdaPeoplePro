@@ -336,8 +336,9 @@ jobs:
             --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            # echo API_URL="http://${BACKEND_IP}:3030"
-            if curl --connect-timeout 5 -s "${API_URL}/api/status" | grep "ok"; then return 0; else return 1; fi
+            echo API_URL="http://${BACKEND_IP}:3030"
+            if curl "${API_URL}/api/status" | grep "ok"; then return 0; else return 1; fi
+            --connect-timeout 5 -s
       - run:
           name: Frontend smoke test.
           command: |
@@ -357,7 +358,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            yum install -y npm nodejs
+            yum install tar gzip npm nodejs -y 
       - run:
           name: Update cloudfront distribution
           command: |
