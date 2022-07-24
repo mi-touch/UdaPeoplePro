@@ -200,7 +200,7 @@ jobs:
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/development.env
             echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> backend/development.env
             echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> backend/development.env
-            cat backend/.env
+            cat backend/development.env
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
       - persist_to_workspace:
