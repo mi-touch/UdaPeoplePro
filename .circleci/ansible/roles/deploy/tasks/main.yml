@@ -29,10 +29,10 @@
     production: yes
     state: present
 - name: extract artifact
-  become: yes
+  # become: yes
   unarchive:
     src: ~/project/artifact.tar.gz
-    dest: ~/
+    dest: /home/ubuntu
 
 - name: start app
   become: yes
