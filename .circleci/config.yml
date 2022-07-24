@@ -191,22 +191,21 @@ jobs:
           name: Configure server
           command: |
             echo ENVIRONMENT=production > backend/.env
-            echo TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION')}}" >> backend/.env
-            echo TYPEORM_ENTITIES: "{{ lookup('env', 'TYPEORM_ENTITIES')}}" >> backend/.env
-            echo TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST')}}" >> backend/.env
-            echo TYPEORM_PORT: "{{ lookup('env', 'TYPEORM_PORT')}}" >> backend/.env
-            echo TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME')}}" >> backend/.env
-            echo TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD')}}" >> backend/.env
-            echo TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE')}}" >> backend/.env
-            echo TYPEORM_MIGRATIONS: "{{ lookup('env', 'TYPEORM_MIGRATIONS')}}" >> backend/.env
-            echo TYPEORM_MIGRATIONS_DIR: "{{ lookup('env', 'TYPEORM_MIGRATIONS_DIR')}}" >> backend/.env
+            echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> backend/.env
+            echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> backend/.env
+            echo TYPEORM_HOST=$TYPEORM_HOST >> backend/.env
+            echo TYPEORM_PORT=$TYPEORM_PORT >> backend/.env
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/.env
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/.env
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env
+            echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> backend/.env
+            echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> backend/.env
             cat backend/.env
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
       - persist_to_workspace:
           root: ~/
-          paths:
-            - project/backend
+          paths: [project/backend]
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       # Here's where you will add some code to rollback on failure      
@@ -324,9 +323,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update --no-cache curl aws-cli nodejs npm
-      # - attach_workspace:
-      #     at: ~/
+            apk add --update --no-cache curl npm nodejs aws-cli
       - run:
           name: Backend smoke test.
           command: |
@@ -341,9 +338,9 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-west-2.amazonaws.com/#/employees"            
+            export URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-${AWS_DEFAULT_REGION}.amazonaws.com/#/employees"            
             echo ${URL}
-            if curl -s ${URL} | grep "Welcome"; then return 1; else return 1; fi
+            if curl ${URL} | grep "Welcome"; then return 1; else return 1; fi
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations:
@@ -357,7 +354,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            yum install tar gzip npm nodejs -y 
+            yum install tar gzip -y npm nodejs
       - run:
           name: Update cloudfront distribution
           command: |
@@ -366,9 +363,12 @@ jobs:
             --no-paginate --output text)
             aws cloudformation deploy \
             --template-file .circleci/files/cloudfront.yml \
-            --stack-name InitialStack \
-            --parameter-overrides WorkflowID=${CIRCLE_WORKFLOW_ID:0:7} \
+            --stack-name "InitialStack \
+            --parameter-overrides workflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
             --tags project=udapeople
+
+            echo OldWorkflowID: "${OldWorkflowID}"
+            echo Current WorkflowID: "${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations:
@@ -383,7 +383,6 @@ jobs:
       - run:
           name: Get old stack workflow id
           command: |
-            # your code here
             export OldWorkflowID=<<pipeline.parameters.workflow_id>>
             export STACKS=$(aws cloudformation list-stacks \
             --query "StackSummaries[*].StackName" \
@@ -397,7 +396,6 @@ jobs:
               # aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
               # aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
             fi
-            
 
 workflows:
   default:
