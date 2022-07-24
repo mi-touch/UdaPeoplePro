@@ -387,28 +387,28 @@ jobs:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7} 
       Here's where you will add some code to rollback on failure  
 
-  cleanup:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      - checkout
-      - attach_workspace:
-          at: ~/
-      - run:
-          name: Get old stack workflow id
-          command: |
-            export OldWorkflowID=$(cat ~/OldWorkflowID.txt)
-            echo OldWorkflowID is:  "${OldWorkflowID}"
-            echo CIRCLE_WORKFLOW_ID is:  "${CIRCLE_WORKFLOW_ID:0:7}"
-      - run:
-          name: Remove old stacks and files
-          command: |
-            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
-            then
-              # aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
-              # aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
-              # aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
-            fi
+  # cleanup:
+  #   docker:
+  #     - image: amazon/aws-cli
+  #   steps:
+  #     - checkout
+  #     - attach_workspace:
+  #         at: ~/
+  #     - run:
+  #         name: Get old stack workflow id
+  #         command: |
+  #           export OldWorkflowID=$(cat ~/OldWorkflowID.txt)
+  #           echo OldWorkflowID is:  "${OldWorkflowID}"
+  #           echo CIRCLE_WORKFLOW_ID is:  "${CIRCLE_WORKFLOW_ID:0:7}"
+  #     - run:
+  #         name: Remove old stacks and files
+  #         command: |
+  #           if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
+  #           then
+  #             # aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+  #             # aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
+  #             # aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+  #           fi
 
 workflows:
   default:
