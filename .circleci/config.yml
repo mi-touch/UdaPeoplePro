@@ -191,17 +191,6 @@ jobs:
       - run:
           name: Configure server
           command: |
-            # echo ENVIRONMENT=production >> backend/development.env
-            # echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> backend/development.env
-            # echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> backend/development.env
-            # echo TYPEORM_HOST=$TYPEORM_HOST >> backend/development.env
-            # echo TYPEORM_PORT=$TYPEORM_PORT >> backend/development.env
-            # echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/development.env
-            # echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/development.env
-            # echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/development.env
-            # echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> backend/development.env
-            # echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> backend/development.env
-            # cat backend/development.env
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
       - persist_to_workspace:
@@ -225,8 +214,6 @@ jobs:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip -qq awscliv2.zip
             sudo ./aws/install
-      # - attach_workspace:
-      #     at: ~/
       - run:
           name: Run migrations
           command: |
@@ -247,13 +234,22 @@ jobs:
 
   deploy-frontend:
     docker:
-      - image: python:3.7-alpine3.16
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: Install AWS CLI
           command: |
-            apk add --update --no-cache tar gzip nodejs npm aws-cli
+            sudo apt install -y tar gzip curl
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip -qq awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: Install Ansible
+          command: |
+             sudo apt-get update
+             sudo apt-get install python3-pip git libffi-dev libssl-dev -y
+             pip3 install ansible
       - run:
           name: Get backend url
           command: |
@@ -282,16 +278,25 @@ jobs:
                     
   deploy-backend:
     docker:
-      - image: python:3.7-alpine3.16
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - add_ssh_keys:
           fingerprints:
             - '95:ec:04:8e:81:4e:0b:75:ca:99:0d:e9:01:64:be:e1'
       - run:
-          name: Install dependencies
+          name: Install AWS CLI
           command: |
-            apk add --update --no-cache tar gzip nodejs npm aws-cli ansible
+            sudo apt install -y tar gzip curl
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip -qq awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: Install Ansible
+          command: |
+             sudo apt-get update
+             sudo apt-get install python3-pip git libffi-dev libssl-dev -y
+             pip3 install ansible
       # - restore_cache:
       #     keys: [backend-build]
       - attach_workspace:
@@ -304,8 +309,6 @@ jobs:
             npm run build
             cd ..
             tar -C backend -czvf artifact.tar.gz .
-            # mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
-            # mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
             cd .circleci/ansible
             echo "Contents  of the inventory.txt file is -------"
             cat ~/project/.circleci/ansible/inventory.txt
