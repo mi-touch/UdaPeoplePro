@@ -174,30 +174,30 @@ jobs:
       - destroy-environment:
            workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
-  # configure-infrastructure:
-  #   docker:
-  #     - image: python:3.7-alpine3.16
-  #   steps:
-  #     - checkout
-  #     - add_ssh_keys:
-  #         fingerprints:
-  #           - '95:ec:04:8e:81:4e:0b:75:ca:99:0d:e9:01:64:be:e1'
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           apk add --update --no-cache tar gzip ansible aws-cli
-  #     - attach_workspace:
-  #         at: ~/
-  #     - run:
-  #         name: Configure server
-  #         command: |
-  #           cd .circleci/ansible
-  #           ansible-playbook -i inventory.txt configure-server.yml
-  #     - persist_to_workspace:
-  #         root: ~/
-  #         paths: [project/backend]
-  #     - destroy-environment:
-  #         workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.16
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - '95:ec:04:8e:81:4e:0b:75:ca:99:0d:e9:01:64:be:e1'
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update --no-cache tar gzip ansible aws-cli
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Configure server
+          command: |
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt configure-server.yml
+      - persist_to_workspace:
+          root: ~/
+          paths: [project/backend]
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       # Here's where you will add some code to rollback on failure      
 
   # run-migrations:
@@ -429,8 +429,8 @@ workflows:
       #     filters:
       #       branches:
       #         only: [test-feature-branch]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
       # - run-migrations:
       #     requires: [configure-infrastructure]
       # - deploy-frontend:
